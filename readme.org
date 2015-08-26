@@ -1,0 +1,94 @@
+* Minimalist example
+This sections deals with the creation of the minimal, working,
+NodeJS/Express application, the code shown here is part of the
+minimal.js file.
+
+** minimalist.js                                                  :noexport:
+#+BEGIN_SRC js :tangle 01minimalist/minimalist.js
+// Minimalist NodeJS and Express application
+
+<<01minimalist/minimalist.js>>
+#+END_SRC
+
+** Installing 3rd party libraries
+#+BEGIN_SRC sh
+npm init
+#+END_SRC
+
+#+BEGIN_SRC sh
+npm install express --save
+#+END_SRC
+
+** Requiring libraries
+NodeJS and Express are frameworks. A software framework is a provider
+of generic functionality that saves programmers from having to
+re-invent the wheel in every new project. In our js file we will want
+to load/import 2 frameworks, ~http~ and ~express~. 
+
+The ~http~ framework (https://nodejs.org/api/http.html) provides the
+basis for creating an http server.
+
+The ~express~ library (http://expressjs.com/) is built on top of
+~http~ and provides an extra level of abstraction for creating web
+services.
+
+To import/load the libraries we need to call the built-in ~require~
+function passing the desired library name as a parameter.
+
+#+BEGIN_SRC js :noweb-ref 01minimalist/minimalist.js
+var http    = require('http');
+var express = require('express');
+#+END_SRC
+
+** Creating the ~app~ object
+The app object is created by calling the express library.
+
+#+BEGIN_SRC js :noweb-ref 01minimalist/minimalist.js
+var app = express();
+#+END_SRC
+
+** Creating a route
+Routes are blocks of code that get called when a client makes a
+request to a particular url of the site, there are several ways to
+define a route with the express library, the simplest of which is
+calling theh ~get()~ method on our app object, we'll need to pass 2
+things to this method, the route as a string and a function that will
+be used as callback, this function in turn should take a request and a
+response arguments.
+
+#+BEGIN_SRC js :noweb-ref 01minimalist/minimalist.js
+app.get('/', function (request, response) {
+    response.send('Welcome to the simplest web application.');
+});
+#+END_SRC
+
+In this case we are using an anonymous function, however note that we
+could achive the same thing by doing the following:
+
+#+BEGIN_SRC js
+var rootCallback = function (request, response) {
+    response.send('Welcome to the simplest web application.');
+});
+
+app.get('/', rootCallback);
+#+END_SRC
+
+** Creating the server and putting it to listen
+#+BEGIN_SRC js :noweb-ref 01minimalist/minimalist.js
+var server = http.createServer(app);
+server.listen(8000);
+#+END_SRC
+
+** Running the server
+Open a terminal and change to the directory that contains the
+application js file (minimalist.js in this case)
+
+#+BEGIN_SRC sh
+node minimalist.js
+#+END_SRC
+
+Now you can open an webbrowser and navigate to http://localhost:8000
+and see the web application in action!
+
+
+* Integrating HTML templates

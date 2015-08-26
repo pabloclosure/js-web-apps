@@ -1,16 +1,26 @@
+#+LATEX_CLASS: tecmty
+
 * Minimalist example
 This sections deals with the creation of the minimal, working,
 NodeJS/Express application, the code shown here is part of the
-minimal.js file.
+=app.js= file in the =01minimalist= directory.
 
-** minimalist.js                                                  :noexport:
-#+BEGIN_SRC js :tangle 01minimalist/minimalist.js
+** app.js                                                          :noexport:
+#+BEGIN_SRC js :tangle 01minimalist/app.js
 // Minimalist NodeJS and Express application
 
-<<01minimalist/minimalist.js>>
+<<01minimalist/app.js>>
 #+END_SRC
 
 ** Installing 3rd party libraries
+Run this commands on your shell/terminal, be careful that your
+terminal should be at the location of the directory where you are
+creating your application, you can know which directory your terminal
+is on by looking at the "prompt" the piece of text that appears every
+line preceding what you type. You can navigate to different
+directories in your shell/terminal by using the ~cd~ command, followed
+by a valid directory path.
+
 #+BEGIN_SRC sh
 npm init
 #+END_SRC
@@ -22,8 +32,8 @@ npm install express --save
 ** Requiring libraries
 NodeJS and Express are frameworks. A software framework is a provider
 of generic functionality that saves programmers from having to
-re-invent the wheel in every new project. In our js file we will want
-to load/import 2 frameworks, ~http~ and ~express~. 
+re-invent the wheel in every new project. In our =app.js= file we will
+want to load/import 2 frameworks, ~http~ and ~express~.
 
 The ~http~ framework (https://nodejs.org/api/http.html) provides the
 basis for creating an http server.
@@ -35,7 +45,7 @@ services.
 To import/load the libraries we need to call the built-in ~require~
 function passing the desired library name as a parameter.
 
-#+BEGIN_SRC js :noweb-ref 01minimalist/minimalist.js
+#+BEGIN_SRC js :noweb-ref 01minimalist/app.js
 var http    = require('http');
 var express = require('express');
 #+END_SRC
@@ -43,7 +53,7 @@ var express = require('express');
 ** Creating the ~app~ object
 The app object is created by calling the express library.
 
-#+BEGIN_SRC js :noweb-ref 01minimalist/minimalist.js
+#+BEGIN_SRC js :noweb-ref 01minimalist/app.js
 var app = express();
 #+END_SRC
 
@@ -56,7 +66,7 @@ things to this method, the route as a string and a function that will
 be used as callback, this function in turn should take a request and a
 response arguments.
 
-#+BEGIN_SRC js :noweb-ref 01minimalist/minimalist.js
+#+BEGIN_SRC js :noweb-ref 01minimalist/app.js
 app.get('/', function (request, response) {
     response.send('Welcome to the simplest web application.');
 });
@@ -74,21 +84,181 @@ app.get('/', rootCallback);
 #+END_SRC
 
 ** Creating the server and putting it to listen
-#+BEGIN_SRC js :noweb-ref 01minimalist/minimalist.js
+#+BEGIN_SRC js :noweb-ref 01minimalist/app.js
 var server = http.createServer(app);
 server.listen(8000);
 #+END_SRC
 
 ** Running the server
 Open a terminal and change to the directory that contains the
-application js file (minimalist.js in this case)
+application js file.
 
 #+BEGIN_SRC sh
-node minimalist.js
+node app.js
 #+END_SRC
 
 Now you can open an webbrowser and navigate to http://localhost:8000
 and see the web application in action!
 
+* Responding with HTML
+** Introduction
+In this section, our NodeJS/Express application will respond to the
+user not with strings but by returning a file, in this particular case
+an HTML file.
 
-* Integrating HTML templates
+** app.js                                                         :noexport:
+#+BEGIN_SRC js :tangle (prog1 "02withtemplates/app.js" (make-directory "02withtemplates" "."))
+// NodeJS and Express application
+// With templating capabilities
+
+var http    = require('http');
+var express = require('express');
+
+
+var app = express();
+
+<<root-route-with-file-response>>
+
+var server = http.createServer(app);
+server.listen(8000);
+#+END_SRC
+
+** Responding with HTML
+To respond to a request with html, we use the =sendFile()= method of
+the response object. We can now modify our root "/" route to respond
+with the =index.html= file instead of a string.
+
+#+BEGIN_SRC js :noweb-ref root-route-with-file-response
+app.get('/', function (request, response) {
+    response.sendFile(__dirname + '/index.html');
+});
+#+END_SRC
+
+Notice how the argument we pass to the =sendFile()= method is the
+concatenation of the ~__dirname~ variable and the desired filename
+prepanded with a forward-slash. The ~__dirname~ variable is set up by
+the Node and contains the full path of the directory where the
+=app.js= file is located at.
+
+Of course we now have to also create a =index.html= file:
+
+#+BEGIN_SRC html :tangle 02withtemplates/index.html
+<h1>NodeJS/Express web application</h1>
+
+<p>This time the server responded, not with a string but with this
+  html file</p>
+
+<p>Remember that html is nothing but a convention where one
+  "surrounds" text with tags, and the web browsers node how to display
+  the document to the end user</p>
+#+END_SRC
+
+** Running the server
+Open a terminal and change to the directory that contains the
+application js file.
+
+#+BEGIN_SRC sh
+node app.js
+#+END_SRC
+
+Now you can open an webbrowser and navigate to http://localhost:8000
+and see the web application in action!
+
+* Responding with customized/processed HTML
+** Introduction
+In this section we configure our NodeJS/Express application to respond
+with html that will be custom-made for every request via a templating
+engine. A template engine is a processor of html documents, it extends
+the html syntax allowing developers to insert commands in .html files,
+that, when processed by the engine, are converted into valid html.
+
+The templating engine we will utilize is *swig*
+(http://paularmstrong.github.io/swig/). Be aware that I use swig for
+now because it shares the same syntax with Python's Django/Jinja
+templating engines (I come from a python background) so I might start
+using different templating engines in the future.
+
+** app.js                                                         :noexport:
+#+BEGIN_SRC js :tangle (prog1 "03withcustomtemplates/app.js" (make-directory "03withcustomtemplates" "."))
+// NodeJS and Express application
+// With templating capabilities
+
+var http    = require('http');
+var express = require('express');
+
+var app = express();
+
+<<templating-engine-configuration>>
+
+<<root-route-with-customized-html>>
+
+var server = http.createServer(app);
+server.listen(8000);
+#+END_SRC
+
+** Configuring the templating engine
+#+BEGIN_SRC js :noweb-ref templating-engine-configuration
+var swig = require('swig');
+app.engine('html', swig.renderFile);
+app.set('view engine', 'html');
+app.set('views', './views');
+#+END_SRC
+
+** Responding with customized html
+We won't be using the ~sendFile()~ method of our app object anymore,
+we will replace it with the ~render()~ method. ~render()~ unlike it's
+predecessor does not need the full path of the file, only the
+filename. This is because we've already instructed our templating
+engine where our views or templates are located at (see the previous
+section). The ~render()~ method also takes, optionally, a context
+object. The context object's attributes can be referred to inside our
+html by following the templating engine syntax.
+
+#+BEGIN_SRC js :noweb-ref root-route-with-customized-html
+app.get('/', function (request, response) {
+    var context = {
+        randomNum1: Math.random(),
+        randomNum2: Math.random(),
+        randomNum3: Math.random()
+    };
+
+    response.render('index.html', context);
+});
+#+END_SRC
+
+Now we'll create our index.html file, this time inside the =views/=
+directory. Remember, the templating engine has been configured to know
+that he should pull all the files we tell it to from a particular
+directory.
+
+Inside the html file we can use double curly braces ~{{ }}~ to refer
+to a context variable, these curly braces won't actually appear on the
+server response, but rather will be replaced by the actual value of
+the data they refer to!
+
+#+BEGIN_SRC html :tangle (prog1 "03withcustomtemplates/views/index.html" (make-directory "03withcustomtemplates/views" "."))
+<h1>NodeJS/Express web application</h1>
+<h3>Success!</h3>
+
+<p>This html document is custom made for every request by our
+  templating engine, this means the same html file can have keep the
+  same structure but have different content for each user!</p>
+
+<ul>
+  <li>Random number 1: {{ randomNum1 }}</li>
+  <li>Random number 2: {{ randomNum2 }}</li>
+  <li>Random number 3: {{ randomNum3 }}</li>
+</ul>
+#+END_SRC
+
+** Running the server
+Open a terminal and change to the directory that contains the
+application js file.
+
+#+BEGIN_SRC sh
+node app.js
+#+END_SRC
+
+Now you can open an webbrowser and navigate to http://localhost:8000
+and see the web application in action!
+

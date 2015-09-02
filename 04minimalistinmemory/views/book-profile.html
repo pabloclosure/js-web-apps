@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="text-center">{{ bookName }}</h1>
+<h2 class="text-center">{{ bookAuthor }}</h1>
+
+<div class="row">
+  <div class="col-md-4 col-md-offset-2">
+    <ul class="text-right">
+      <li>Genre: {{ genre }}</li>
+      <li>In stock: {{ inStock }}</li>
+      <li>Price: {{ bookPrice | currency }}</li>
+      <li>Likes: {{ likes }}</li>
+    </ul>
+    
+    <div class="text-right">
+      <button class="btn btn-success">Buy now</button>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <img src="{{ img }}" alt="No image for this book" />
+  </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Author</th>
+      <th>Genre</th>
+      <th>Price</th>
+      <th>Stock</th>
+      <th>Likes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for book in books %}
+    <tr>
+      <td><a href="/catalog/{{ book.bookName }}">{{ book.bookName }}</a></td>
+      <td>{{ book.bookAuthor}}</td>
+      <td>{{ book.genre }}</td>
+      <td class="text-right">{{ book.bookPrice | currency }}</td>
+      <td class="text-right">{{ book.inStock }}</td>
+      <td class="text-right">{{ book.likes }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}

@@ -1,5 +1,7 @@
 #+LATEX_CLASS: tecmty
 
+https://github.com/pabloclosure/js-web-apps
+
 * Minimalist example
 This sections deals with the creation of the minimal, working,
 NodeJS/Express application, the code shown here is part of the
@@ -262,3 +264,245 @@ node app.js
 Now you can open an webbrowser and navigate to http://localhost:8000
 and see the web application in action!
 
+* Minimalist in memory application
+** Introduction
+This section is about creating an improved minimialist example. The
+following code creates the web application for an online store whose
+products data is located in memory.
+
+** app.js
+#+BEGIN_SRC js :tangle (prog1 "04minimalistinmemory/app.js" (make-directory "04minimalistinmemory" "."))
+// NodeJS and Express application
+// With in memory database
+
+var http    = require('http');
+var express = require('express');
+var swig    = require('swig');
+var _       = require('underscore');
+
+var app = express();
+
+app.engine('html', swig.renderFile);
+app.set('view engine', 'html');
+app.set('views', 'views/');
+
+<<currency-filter>>
+
+<<book-database-data-structure>>
+    
+app.get('/', function(request, response) {
+    var mostLikedBook = _.max(booksData, function(book) { return book.likes; });
+    response.render('index.html', { mostLikedBook: mostLikedBook });
+});
+
+app.get('/catalog', function(request, response) {
+    response.render('catalog.html', { books: booksData });
+});
+
+app.get('/catalog/:bookName', function(request, response) {
+    var book = _.findWhere(booksData, { bookName: request.params.bookName });
+    
+    if (!book) {
+        response.status(404);
+        response.end();
+    }
+        
+    response.render('book-profile.html', book);
+});
+
+var server = http.createServer(app);
+server.listen(8000)
+#+END_SRC
+
+*** Currency Filter
+Here we extend the swig templating engine to have a currency
+filter. Filters are functions that take something being referred to in
+the html file and transform it. In this case the filter will work with
+numbers, returning their human readable representation as a currency.
+
+#+BEGIN_SRC js :noweb-ref currency-filter
+swig.setFilter('currency',  function(value) {
+  return '$' + value.toFixed(2);
+});
+#+END_SRC
+
+*** Book Database Data Structure
+This is the whole database of the site. In this case we have an
+"in-memory" database because we are storing it in the RAM memory, the
+same as our NodeJS/Express application. This of course has the
+downside that is not scalable (we would soon run out of RAM) and that
+any new data would be lost on a server reset.
+
+#+BEGIN_SRC js :noweb-ref book-database-data-structure
+var booksData = [
+    {
+        bookName: "The art of computer programming",
+        bookAuthor: "Donald Knuth",
+        genre: 'Programming',
+        bookPrice: 999.99,
+        img: 'http://ecx.images-amazon.com/images/I/41gCSRxxVeL._SY429_BO1,204,203,200_.jpg',
+        inStock: 4,
+        likes: 35
+    },
+    {
+        bookName: "Code complete: a practial handbook",
+        bookAuthor: "Steve McConnell",
+        genre: 'Programming',
+        bookPrice: 28.99,
+        img: 'http://ecx.images-amazon.com/images/I/41gCSRxxVeL._SY429_BO1,204,203,200_.jpg',
+        inStock: 9,
+        likes: 17
+    },
+    {
+        bookName: "JavaScript the Definitive Guide",
+        bookAuthor: "David Flannagan",
+        genre: 'Programming',
+        bookPrice: 22.10,
+        img: 'http://ecx.images-amazon.com/images/I/51WD-F3GobL._SX379_BO1,204,203,200_.jpg',
+        inStock: 83,
+        likes: 1
+    },
+    {
+        bookName: "Harry Potter and the Philosopher's Stone",
+        bookAuthor: "J.K. Rowling",
+        genre: 'Fantasy',
+        bookPrice: 17.59,
+        img: 'http://ecx.images-amazon.com/images/I/51MU5VilKpL._SX338_BO1,204,203,200_.jpg',
+        inStock: 44,
+        likes: 2099
+    },
+    {
+        bookName: "Harry Potter and the Chamber of Secrets",
+        bookAuthor: "J.K. Rowling",
+        genre: 'Fantasy',
+        bookPrice: 19.59,
+        img: 'http://ecx.images-amazon.com/images/I/51jNORv6nQL._SX340_BO1,204,203,200_.jpg',
+        inStock: 56,
+        likes: 1902
+    }
+];
+#+END_SRC
+
+** base.html
+This html template won't actually be sent to our user. It is meant to
+be reused by our other templates. You can think of it as a "skeleton"
+for the others to build on. The ~{% block content %}{% endblock
+content %}~ declares an area that the other templates can fill with
+their own stuff.
+
+#+BEGIN_SRC html :tangle (prog1 "04minimalistinmemory/views/base.html" (make-directory "04minimalistinmemory/views" "."))
+<html>
+
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+  </head>
+  
+  <body>
+
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">The Book Store</a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li><a href="/catalog">Catalog</a></li>
+          </ul>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+
+    <div class="container">
+    {% block content %}
+    {% endblock content %}
+    </div>
+
+  </body>
+
+</html>
+#+END_SRC
+
+** index.html
+#+BEGIN_SRC html :tangle 04minimalistinmemory/views/index.html
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="center">Welcome to <span style="color: green">The Book Store</span></h1>
+
+<div class="well">
+  <h3 class="text-center">The best place in the internet to browse and buy your favorite books!</h3>
+  
+  <p class="text-center">The most liked book this week was: <a href="/catalog/{{ mostLikedBook.bookName }}/">{{ mostLikedBook.bookName }}</a></p>
+</div>
+{% endblock content %}
+#+END_SRC
+
+** catalog.html
+#+BEGIN_SRC html :tangle 04minimalistinmemory/views/catalog.html
+{% extends 'base.html' %}
+
+{% block content %}
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Author</th>
+      <th>Genre</th>
+      <th>Price</th>
+      <th>Stock</th>
+      <th>Likes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for book in books %}
+    <tr>
+      <td><a href="/catalog/{{ book.bookName }}">{{ book.bookName }}</a></td>
+      <td>{{ book.bookAuthor}}</td>
+      <td>{{ book.genre }}</td>
+      <td class="text-right">{{ book.bookPrice | currency }}</td>
+      <td class="text-right">{{ book.inStock }}</td>
+      <td class="text-right">{{ book.likes }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock content %}
+#+END_SRC
+
+** book-profile.html
+#+BEGIN_SRC html :tangle 04minimalistinmemory/views/book-profile.html
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="text-center">{{ bookName }}</h1>
+<h2 class="text-center">{{ bookAuthor }}</h1>
+
+<div class="row">
+  <div class="col-md-4 col-md-offset-2">
+    <ul class="text-right">
+      <li>Genre: {{ genre }}</li>
+      <li>In stock: {{ inStock }}</li>
+      <li>Price: {{ bookPrice | currency }}</li>
+      <li>Likes: {{ likes }}</li>
+    </ul>
+    
+    <div class="text-right">
+      <button class="btn btn-success">Buy now</button>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <img src="{{ img }}" alt="No image for this book" />
+  </div>
+</div>
+{% endblock content %}
+#+END_SRC

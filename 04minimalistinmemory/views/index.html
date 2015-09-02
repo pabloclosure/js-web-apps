@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="center">Welcome to <span style="color: green">The Book Store</span></h1>
+
+<div class="well">
+  <h3 class="text-center">The best place in the internet to browse and buy your favorite books!</h3>
+  
+  <p class="text-center">The most liked book this week was: <a href="/catalog/{{ mostLikedBook.bookName }}/">{{ mostLikedBook.bookName }}</a></p>
+</div>
+{% endblock content %}
